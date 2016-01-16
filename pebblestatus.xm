@@ -51,7 +51,7 @@ static LSStatusBarItem *pebbleItem;
 	%orig;
 }//end statuschanged
 %end
-/*
+
 @interface UIStatusBarItemView : UIView
 -(id)contentsImage;
 -(BOOL)updateForNewData:(id)arg1 actions:(int)arg2;
@@ -103,4 +103,4 @@ static BOOL shouldUpdateToHide;
 
 	return %orig;
 }
-%end*/
+%end
