@@ -52,55 +52,22 @@ static LSStatusBarItem *pebbleItem;
 }//end statuschanged
 %end
 
-@interface UIStatusBarItemView : UIView
--(id)contentsImage;
--(BOOL)updateForNewData:(id)arg1 actions:(int)arg2;
-@end
+%hook UIStatusBarItemView
 
-@interface UIStatusBarBluetoothItemView : UIStatusBarItemView
--(BOOL)hideBluetooth;
-@end
-
-%hook UIStatusBarBluetoothItemView
-static BOOL shouldUpdateToHide;
-
-%new -(BOOL)hideBluetooth{
-	BOOL pebbleConnected;
-	for(id device in [[%c(BluetoothManager) sharedInstance] connectedDevices]){
-		if([[device name] rangeOfString:@"Pebble"].location != NSNotFound){
-			NSLog(@"[pebblestatus] Detected connection to Pebble with name: %@", [device name]);
-			pebbleConnected = YES;
-			break;
+- (void)setVisible:(BOOL)arg1 frame:(struct CGRect )arg2 duration:(double)arg3{
+	if([NSStringFromClass([self class]) containsString:@"UIStatusBarBluetoothItemView"]){
+		BOOL pebbleConnected;
+		for(id device in [[%c(BluetoothManager) sharedInstance] connectedDevices]){
+			if([[device name] rangeOfString:@"Pebble"].location != NSNotFound){
+				pebbleConnected = YES;
+				break;
+			}
+		}
+		if(pebbleConnected){
+			arg2.size.width = 0;
+			arg1 = NO;
 		}
 	}
-
-	return [[[NSDictionary dictionaryWithContentsOfFile:[NSHomeDirectory() stringByAppendingPathComponent:@"/Library/Preferences/com.hesze.pebblestatus.plist"]] objectForKey:@"hideBluetooth"] boolValue] && pebbleConnected;
-}//end hide
-
--(id)contentsImage{
-	if([self hideBluetooth]){
-		shouldUpdateToHide = YES;
-		return nil;
-	}
-
-	return %orig;
-}
-
--(id)imageWithShadowNamed:(id)arg1{
-	if([self hideBluetooth]){
-		shouldUpdateToHide = YES;
-		return nil;
-	}
-
-	return %orig;
-}
-
--(BOOL)updateForNewData:(id)arg1 actions:(int)arg2{
-	if(shouldUpdateToHide){
-		shouldUpdateToHide = NO;
-		return YES;
-	}
-
-	return %orig;
+	%orig;
 }
 %end
